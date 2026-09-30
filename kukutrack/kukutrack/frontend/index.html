@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1F2A1B">
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg">
+<title>KukuTrack</title>
+<style>
+:root{--bg:#F6EFE0;--card:#FFFBF0;--ink:#1F2A1B;--mute:#6B715E;--yolk:#E8A317;--comb:#C2412D;--sage:#5F7A45;--line:#D9CDB0}
+@media(prefers-color-scheme:dark){:root{--bg:#141A12;--card:#1E271B;--ink:#F2EAD3;--mute:#A0A78F;--line:#33402D}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+h1,h2,h3,.num{font-family:"Iowan Old Style",Georgia,serif;letter-spacing:-.01em}
+header{background:#1F2A1B;color:#F6EFE0;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;justify-content:space-between;align-items:center}
+header b{font:700 20px Georgia,serif}header small{opacity:.7}
+main{max-width:720px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:1.5px dashed var(--line);border-radius:14px;padding:14px;margin:0 0 12px}
+.card.click{cursor:pointer}.row{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.stat{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat .num{font-size:26px;font-weight:700}.stat span{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
+label{display:block;font-size:13px;color:var(--mute);margin:8px 0 3px}
+input,select,textarea{width:100%;padding:11px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
+button{background:var(--ink);color:var(--bg);border:0;border-radius:10px;padding:11px 16px;font:600 15px system-ui;cursor:pointer}
+button.alt{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}button.yolk{background:var(--yolk);color:#1F2A1B}button.sm{padding:6px 10px;font-size:13px}
+.pill{display:inline-block;border-radius:99px;padding:2px 9px;font-size:12px;background:var(--line);color:var(--ink)}.warn{background:var(--yolk);color:#1F2A1B}.critical{background:var(--comb);color:#fff}.ok{background:var(--sage);color:#fff}
+.alert{border-left:5px solid var(--yolk);padding:8px 10px;margin:6px 0;background:var(--card);border-radius:6px}.alert.critical{border-color:var(--comb);color:inherit;background:var(--card)}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#1F2A1B;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;color:#F6EFE0;opacity:.6;border-radius:0;padding:12px 2px;font-size:11px}nav button.on{opacity:1;box-shadow:inset 0 3px var(--yolk)}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;z-index:9}
+.mute{color:var(--mute);font-size:14px}.hide{display:none}
+</style>
+</head>
+<body>
+<header><div><b>🥚 KukuTrack</b><br><small id="sub"></small></div><span id="net" class="pill"></span></header>
+<main id="app"></main>
+<nav id="nav" class="hide"></nav>
+<script>
+const T={en:{acct:'Account type',a_farm:'Farmer',a_buyer:'Buyer',a_supplier:'Supplier',a_vet:'Veterinarian',licence:'KVB licence no. (vets only)',market:'Market',vet:'Vet',mine:'Mine',inbox:'Inquiries',forSale:'For sale',wanted:'Wanted',post:'Post listing',side_sell:'I am selling',side_buy:'I want to buy',title:'Title',price:'Price per unit (KES)',inquire:'Inquire',accept:'Accept',decline:'Decline',complete:'Complete',pending:'Pending',accepted:'Accepted',declined:'Declined',completed:'Completed',closeL:'Close listing',priceWatch:'Price watch',newCase:'New vet case',symptoms:'Symptoms',affected:'Birds affected',urgent:'Urgent',photos:'Photos (up to 5)',reply:'Reply',send:'Send',askVet:'Ask a vet',outbreaks:'Outbreaks (30 days)',diagnose:'Suspected disease',lender:'Lender report',mkLink:'Create share link (14 days)',shareHint:'Share the link with your SACCO or bank. It expires and you can revoke it any time.',revoke:'Revoke',vetPending:'Your vet account is waiting for licence verification.',all:'All',qtyAsk:'Quantity?',msgAsk:'Message (optional)',closeCase:'Close case',consent:'I agree to the Privacy Policy',forgot:'Forgot password?',sendCode:'Send code',code:'6-digit code',newPass:'New password',codeSent:'If registered, a code was sent by SMS',myData:'Download my data',delAcct:'Delete account',delAsk:'Enter your password to permanently delete ALL farm data. This cannot be undone.',home:'Home',money:'Money',stock:'Stock',more:'More',login:'Log in',register:'Create account',phone:'Phone (07…)',password:'Password',name:'Your name',farm:'Farm name',county:'County',
+birds:'Live birds',eggsToday:'Eggs today',eggs7:'Eggs (7 days)',income:'Income (month)',expenses:'Expenses (month)',flocks:'Flocks',addFlock:'Add flock',flockName:'Flock name',type:'Type',layer:'Layer',broiler:'Broiler',kienyeji:'Kienyeji',breed:'Breed',count:'Number of chicks',placed:'Date placed',chickCost:'Cost per chick (KES)',save:'Save',
+logToday:"Today's record",date:'Date',eggs:'Eggs collected',cracked:'Cracked',deaths:'Deaths',feed:'Feed used (kg)',water:'Water (litres)',weight:'Avg weight (g)',notes:'Notes',mortality:'Mortality',henday:'Hen-day %',fcr:'FCR',costTray:'Cost / tray',profit:'Profit',
+vacc:'Vaccinations',done:'Done',recent:'Recent records',savedOffline:'No network - saved on phone, will sync',synced:'Synced',notLogged:'Not logged today',back:'← Back',
+ledger:'Ledger',kind:'Kind',expense:'Expense',incomeK:'Income',category:'Category',amount:'Amount (KES)',desc:'Description',flock:'Flock (optional)',
+item:'Item',unit:'Unit',qty:'Quantity',reorder:'Reorder level',add:'Add',staff:'Staff',role:'Role',logout:'Log out',export:'Download CSV',renew:'Renew (M-Pesa)',plan:'Plan valid until',lang:'Kiswahili',close:'Close flock',
+a_mortality_high:'High deaths today',a_mortality_critical:'Very high deaths - call your vet',a_egg_drop:'Egg production dropped',a_vaccination_due:'Vaccination due',a_low_stock:'Low stock',day:'Day',none:'Nothing here yet'},
+sw:{market:'Soko',vet:'Daktari',mine:'Yangu',inbox:'Maombi',forSale:'Inauzwa',wanted:'Inatafutwa',post:'Weka tangazo',side_sell:'Ninauza',side_buy:'Ninataka kununua',title:'Kichwa',price:'Bei kwa kipimo (KES)',inquire:'Uliza',accept:'Kubali',decline:'Kataa',complete:'Kamilisha',pending:'Inasubiri',accepted:'Imekubaliwa',declined:'Imekataliwa',completed:'Imekamilika',newCase:'Kesi mpya ya daktari',symptoms:'Dalili',affected:'Kuku walioathirika',urgent:'Dharura',photos:'Picha (hadi 5)',reply:'Jibu',send:'Tuma',askVet:'Muulize daktari',outbreaks:'Milipuko (siku 30)',lender:'Ripoti ya mkopo',mkLink:'Tengeneza kiungo (siku 14)',revoke:'Futa',consent:'Nakubali Sera ya Faragha',forgot:'Umesahau nenosiri?',sendCode:'Tuma msimbo',code:'Msimbo wa tarakimu 6',newPass:'Nenosiri jipya',codeSent:'Kama namba imesajiliwa, msimbo umetumwa kwa SMS',myData:'Pakua data yangu',delAcct:'Futa akaunti',delAsk:'Weka nenosiri kufuta data YOTE ya shamba. Hii haiwezi kurudishwa.',home:'Nyumbani',money:'Pesa',stock:'Bidhaa',more:'Zaidi',login:'Ingia',register:'Fungua akaunti',phone:'Simu (07…)',password:'Nenosiri',name:'Jina lako',farm:'Jina la shamba',county:'Kaunti',
+birds:'Kuku hai',eggsToday:'Mayai leo',eggs7:'Mayai (siku 7)',income:'Mapato (mwezi)',expenses:'Matumizi (mwezi)',flocks:'Makundi',addFlock:'Ongeza kundi',flockName:'Jina la kundi',type:'Aina',layer:'Wa mayai',broiler:'Wa nyama',kienyeji:'Kienyeji',breed:'Kuzaliwa',count:'Idadi ya vifaranga',placed:'Tarehe',chickCost:'Bei ya kifaranga (KES)',save:'Hifadhi',
+logToday:'Rekodi ya leo',date:'Tarehe',eggs:'Mayai yaliyokusanywa',cracked:'Yaliyopasuka',deaths:'Vifo',feed:'Chakula (kg)',water:'Maji (lita)',weight:'Uzito wa wastani (g)',notes:'Maelezo',mortality:'Vifo %',henday:'Uzalishaji %',fcr:'FCR',costTray:'Gharama / trei',profit:'Faida',
+vacc:'Chanjo',done:'Imefanyika',recent:'Rekodi za karibuni',savedOffline:'Hakuna mtandao - imehifadhiwa, itatumwa baadaye',synced:'Imetumwa',notLogged:'Haijarekodiwa leo',back:'← Rudi',
+ledger:'Leja',kind:'Aina',expense:'Matumizi',incomeK:'Mapato',category:'Kundi',amount:'Kiasi (KES)',desc:'Maelezo',flock:'Kundi (si lazima)',
+item:'Bidhaa',unit:'Kipimo',qty:'Kiasi',reorder:'Kiwango cha kuagiza',add:'Ongeza',staff:'Wafanyakazi',role:'Wadhifa',logout:'Toka',export:'Pakua CSV',renew:'Lipia (M-Pesa)',plan:'Akaunti hadi',lang:'English',close:'Funga kundi',
+a_mortality_high:'Vifo vingi leo',a_mortality_critical:'Vifo vingi sana - mwite daktari',a_egg_drop:'Mayai yameshuka',a_vaccination_due:'Chanjo inakaribia',a_low_stock:'Bidhaa inaisha',day:'Siku',none:'Hakuna bado'}};
+const S={lang:localStorage.lang||'en',token:localStorage.token||null,me:null,view:'home',flockId:null,reg:false};
+const t=k=>T[S.lang][k]||T.en[k]||k;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const kes=n=>'KES '+Math.round(n||0).toLocaleString();
+const canManage=()=>S.me&&['owner','manager'].includes(S.me.role);
+const $=s=>document.querySelector(s);
+function toast(m){const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.append(d);setTimeout(()=>d.remove(),2800)}
+
+async function api(path,o={}){
+  const r=await fetch('/api'+path,{method:o.method||'GET',headers:{'Content-Type':'application/json',...(S.token?{Authorization:'Bearer '+S.token}:{})},body:o.body?JSON.stringify(o.body):undefined});
+  if(r.status===401&&S.token){logout();throw new Error('Session expired')}
+  if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(typeof d.detail==='string'?d.detail:(d.detail||[]).map(x=>x.msg).join('; ')||r.statusText)}
+  return r.status===204?null:r.json();
+}
+async function cached(key,path){try{const d=await api(path);localStorage['c_'+key]=JSON.stringify(d);return d}catch(e){if(e instanceof TypeError&&localStorage['c_'+key])return JSON.parse(localStorage['c_'+key]);throw e}}
+const Q={get:()=>JSON.parse(localStorage.q||'[]'),set:v=>localStorage.q=JSON.stringify(v)};
+async function submit(type,data){ // offline-first: queue on network failure; server endpoints are idempotent
+  try{const r=await api('/sync/push',{method:'POST',body:{logs:type==='log'?[data]:[],transactions:type==='tx'?[data]:[]}});if(r.errors.length)throw new Error(r.errors[0].error);return true}
+  catch(e){if(e instanceof TypeError){Q.set([...Q.get(),{type,data}]);toast(t('savedOffline'));return false}throw e}}
+async function flush(){const q=Q.get();if(!q.length||!S.token)return;
+  try{const r=await api('/sync/push',{method:'POST',body:{logs:q.filter(i=>i.type==='log').map(i=>i.data),transactions:q.filter(i=>i.type==='tx').map(i=>i.data)}});Q.set([]);toast(t('synced')+(r.errors.length?` (${r.errors.length} rejected)`:''));render()}catch(e){}}
+function net(){const n=$('#net');n.textContent=navigator.onLine?(Q.get().length?'⟳ '+Q.get().length:'online'):'offline';n.className='pill '+(navigator.onLine?'ok':'warn')}
+addEventListener('online',()=>{net();flush()});addEventListener('offline',net);
+
+function logout(){delete localStorage.token;S.token=null;S.me=null;render()}
+function go(v,id){S.view=v;S.flockId=id||null;render()}
+const alertTxt=a=>`${t('a_'+a.code)}${a.flock?': '+esc(a.flock):''}${a.value!=null&&a.code!=='low_stock'?' ('+a.value+(a.code.startsWith('mort')||a.code==='egg_drop'?'%':'')+')':''}`;
+const alerts=l=>l.map(a=>`<div class="alert ${a.level}">${alertTxt(a)}</div>`).join('');
+const kpiRow=(k,kind)=>`<div class="grid"><div class="stat"><span>${t('birds')}</span><div class="num">${k.live_birds}</div></div><div class="stat"><span>${t('mortality')}</span><div class="num">${k.mortality_pct}%</div></div>
+${kind==='broiler'?`<div class="stat"><span>${t('fcr')}</span><div class="num">${k.fcr??'–'}</div></div>`:`<div class="stat"><span>${t('henday')}</span><div class="num">${k.hen_day_pct??'–'}</div></div>`}
+${canManage()&&k.profit!=null?`<div class="stat"><span>${t('profit')}</span><div class="num">${kes(k.profit)}</div></div>`:`<div class="stat"><span>${t('feed')}</span><div class="num">${k.total_feed_kg}</div></div>`}</div>`;
+const field=(id,label,type='text',extra='')=>`<label>${t(label)}</label><input name="${id}" type="${type}" ${extra}>`;
+const opts=(arr,sel)=>arr.map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${esc(l)}</option>`).join('');
+
+const V={
+auth:()=>`<div class="card"><h2>${S.reg?t('register'):t('login')}</h2><form data-form="${S.reg?'register':'login'}">
+${S.reg?field('name','name','text','required minlength=2')+`<label>${t('acct')}</label><select name="account_type">${opts([['farm',t('a_farm')],['buyer',t('a_buyer')],['supplier',t('a_supplier')],['vet',t('a_vet')]])}</select>`:''}${field('phone','phone','tel','required autocomplete=username')}${field('password','password','password','required minlength=6 autocomplete=current-password')}
+${S.reg?field('farm_name','farm','text','required')+field('county','county')+field('licence_no','licence')+`<label class="row" style="justify-content:flex-start"><input type="checkbox" name="consent" required style="width:auto"><a href="/privacy.html" target="_blank">${t('consent')}</a></label>`:`<p><a href="#" data-act="forgot">${t('forgot')}</a></p>`}<p><button class="yolk">${S.reg?t('register'):t('login')}</button> <button type="button" class="alt" data-act="toggleReg">${S.reg?t('login'):t('register')}</button></p></form>
+<button class="alt sm" data-act="lang">${t('lang')}</button></div>`,
+
+forgot:()=>`<div class="card"><h2>${t('forgot')}</h2>${S.fstep?`<form data-form="reset">${field('code','code','text','required inputmode=numeric maxlength=6')}${field('new_password','newPass','password','required minlength=6')}<p><button class="yolk">${t('save')}</button></p></form>`:`<form data-form="forgot">${field('phone','phone','tel','required')}<p><button class="yolk">${t('sendCode')}</button></p></form>`}<button class="alt sm" data-act="forgot0">${t('back')}</button></div>`,
+
+async market(){
+ const tab=S.mtab||'browse',cat=S.mcat||'',side=S.mside||'sell',kind=S.me.account_type,CATS=['eggs','birds','manure','chicks','feed','drugs','equipment','other'];
+ const tabs=`<div class="row" style="justify-content:flex-start;margin-bottom:10px">${[['browse',t('market')],['mine',t('mine')],['inbox',t('inbox')]].map(([k,l])=>`<button class="sm ${tab===k?'':'alt'}" data-act="mtab" data-k="${k}">${l}</button>`).join('')}</div>`;
+ const lcard=l=>`<div class="card"><div class="row"><b>${esc(l.title)}</b><span class="pill">${esc(l.category)}</span></div><div class="mute">${esc(l.seller)}${l.county?' · '+esc(l.county):''}</div><div>${l.quantity} ${esc(l.unit)}${l.price_per_unit?` · KES ${l.price_per_unit}/${esc(l.unit)}`:''}</div>${l.description?`<div class="mute">${esc(l.description)}</div>`:''}
+  <p style="margin:8px 0 0">${l.mine?(l.status==='open'?`<button class="sm alt" data-act="lclose" data-id="${l.id}">${t('closeL')}</button>`:`<span class="pill">${l.status}</span>`):`<button class="sm yolk" data-act="inq" data-id="${l.id}" data-u="${esc(l.unit)}">${t('inquire')}</button>`}</p></div>`;
+ if(tab==='inbox'){const [i,o]=await Promise.all([api('/market/inquiries?box=in'),api('/market/inquiries?box=out')]);
+  const card=(x,box)=>`<div class="card"><div class="row"><b>${esc(x.listing_title)}</b><span class="pill ${['accepted','completed'].includes(x.status)?'ok':x.status==='pending'?'warn':''}">${t(x.status)}</span></div><div class="mute">${esc(x.other)} · ${x.quantity} ${esc(x.unit)}${x.message?' · '+esc(x.message):''}</div>${x.phone?`<p><a href="tel:+${x.phone}">📞 +${x.phone}</a></p>`:''}
+   ${box==='in'&&x.status==='pending'?`<button class="sm" data-act="resp" data-id="${x.id}" data-a="accept">${t('accept')}</button> <button class="sm alt" data-act="resp" data-id="${x.id}" data-a="decline">${t('decline')}</button>`:''}${box==='in'&&x.status==='accepted'?`<button class="sm" data-act="resp" data-id="${x.id}" data-a="complete">${t('complete')}</button>`:''}</div>`;
+  return tabs+`<h3>⬇ ${t('inbox')}</h3>${i.map(x=>card(x,'in')).join('')||`<p class="mute">${t('none')}</p>`}<h3>⬆</h3>${o.map(x=>card(x,'out')).join('')||`<p class="mute">${t('none')}</p>`}`}
+ if(tab==='mine'){const l=await api('/market/listings?mine=true');
+  const sides=kind==='buyer'?[['buy',t('side_buy')]]:kind==='supplier'?[['sell',t('side_sell')]]:[['sell',t('side_sell')],['buy',t('side_buy')]];
+  return tabs+`<details class="card"><summary><b>+ ${t('post')}</b></summary><form data-form="listing"><label>${t('kind')}</label><select name="side">${opts(sides)}</select><label>${t('category')}</label><select name="category">${opts(CATS.map(c=>[c,c]))}</select>
+  ${field('title','title','text','required minlength=3')}${field('quantity','qty','number','required min=0.01 step=any')}${field('unit','unit','text','required value=tray')}${field('price_per_unit','price','number','min=0 step=any')}${field('description','desc')}<p><button class="yolk">${t('save')}</button></p></form></details>`+(l.map(lcard).join('')||`<p class="mute">${t('none')}</p>`)}
+ const [l,pr]=await Promise.all([api(`/market/listings?side=${side}${cat?'&category='+cat:''}`),cat?api('/market/prices?category='+cat):[]]);
+ return tabs+`<div class="row" style="justify-content:flex-start;margin-bottom:10px"><button class="sm ${side==='sell'?'':'alt'}" data-act="mside" data-k="sell">${t('forSale')}</button><button class="sm ${side==='buy'?'':'alt'}" data-act="mside" data-k="buy">${t('wanted')}</button>
+  <select data-filter="mcat" style="width:auto"><option value="">${t('all')}</option>${opts(CATS.map(c=>[c,c]),cat)}</select></div>
+  ${pr.length?`<div class="card"><b>${t('priceWatch')}</b>${pr.slice(0,3).map(p=>`<div class="row"><span>${esc(p.county)} · /${esc(p.unit)}</span><span>KES ${p.median} <span class="mute">(${p.n})</span></span></div>`).join('')}</div>`:''}
+  ${l.map(lcard).join('')||`<p class="mute">${t('none')}</p>`}`},
+
+async vet(){
+ const me=S.me;if(me.account_type==='vet'&&!me.verified)return `<div class="card">${t('vetPending')}</div>`;
+ const [cs,ob]=await Promise.all([api('/vet/cases'),api('/vet/outbreaks')]);
+ const list=cs.map(c=>`<div class="card click" data-go="vetcase" data-id="${c.id}"><div class="row"><b>${esc(c.title)}</b><span class="pill ${c.urgency==='urgent'?'critical':c.status==='answered'?'ok':'warn'}">${c.urgency==='urgent'?t('urgent'):c.status}</span></div>
+  <div class="mute">${esc(c.farm_name)}${c.county?' · '+esc(c.county):''}${c.flock_kind?' · '+t(c.flock_kind):''}${c.disease?' · '+esc(c.disease):''}</div></div>`).join('')||`<p class="mute">${t('none')}</p>`;
+ const obs=`<div class="card"><h3>${t('outbreaks')}</h3>${ob.map(o=>`<div class="row"><span>${esc(o.county)} · ${esc(o.disease)}</span><b>${o.cases}</b></div>`).join('')||`<span class="mute">${t('none')}</span>`}</div>`;
+ if(me.account_type==='vet')return `<h3>🩺 ${t('vet')}</h3>${list}${obs}`;
+ const fl=await cached('flocks','/flocks');
+ return `<details class="card" ${S.askFlock?'open':''}><summary><b>+ ${t('newCase')}</b></summary><form data-form="vetcase">${field('title','title','text','required minlength=3')}<label>${t('symptoms')}</label><textarea name="symptoms" rows="3" required minlength="5"></textarea>
+  <label>${t('flock')}</label><select name="flock_id"><option value="">—</option>${opts(fl.map(f=>[f.id,f.name]),String(S.askFlock||''))}</select>${field('affected_birds','affected','number','min=0')}
+  <label class="row" style="justify-content:flex-start"><input type="checkbox" name="urgency" style="width:auto"> ${t('urgent')}</label><label>${t('photos')}</label><input type="file" name="photos" accept="image/*" multiple><p><button class="yolk">${t('send')}</button></p></form></details>${list}${obs}`},
+
+async vetcase(){
+ const c=await api('/vet/cases/'+S.flockId),isVet=S.me.account_type==='vet';
+ return `<button class="alt sm" data-go="vet">${t('back')}</button><h2>${esc(c.title)}</h2><div class="mute">${esc(c.farm_name)}${c.county?' · '+esc(c.county):''} · ${c.status}${c.disease?' · '+esc(c.disease):''}</div>
+ <div class="card">${esc(c.symptoms)}${c.affected_birds!=null?`<br><span class="mute">${t('affected')}: ${c.affected_birds}</span>`:''}<div>${c.photos.map(p=>`<img data-photo="${p}" alt="" style="width:31%;border-radius:8px;margin:2px;background:var(--line);min-height:70px;object-fit:cover">`).join('')}</div></div>
+ ${c.flock?`<div class="card"><b>${esc(c.flock.name)}</b> · ${t(c.flock.kind)} · ${t('day')} ${c.flock.age_days}${kpiRow(c.flock.kpis,c.flock.kind)}${alerts(c.flock.alerts.map(a=>({...a,flock:''})))}</div>`:''}
+ ${c.messages.map(x=>`<div class="card" style="border-style:solid${x.from_vet?';background:var(--bg)':''}"><b>${esc(x.author)}${x.from_vet?' 🩺':''}</b> <span class="mute">${x.created_at.slice(0,16).replace('T',' ')}</span><br>${esc(x.body)}</div>`).join('')}
+ ${c.status!=='closed'?`<form class="card" data-form="vetreply" data-case="${c.id}"><textarea name="body" rows="3" required placeholder="${t('reply')}"></textarea><p><button class="yolk">${t('send')}</button> <button type="button" class="alt sm" data-act="vclose" data-id="${c.id}">${t('closeCase')}</button></p></form>`:''}
+ ${isVet&&c.status!=='closed'?`<form class="card" data-form="vetdx" data-case="${c.id}">${field('disease','diagnose','text','required minlength=2')}<p><button class="sm">${t('save')}</button></p></form>`:''}`},
+
+async home(){
+  const [d,f]=await Promise.all([cached('dash','/reports/dashboard'),cached('flocks','/flocks')]);
+  return `<div class="grid"><div class="stat"><span>${t('birds')}</span><div class="num">${d.live_birds}</div></div><div class="stat"><span>${t('eggsToday')}</span><div class="num">${d.eggs_today}</div></div>
+  <div class="stat"><span>${t('eggs7')}</span><div class="num">${d.eggs_7d}</div></div>${canManage()?`<div class="stat"><span>${t('profit')}</span><div class="num">${kes(d.month_income-d.month_expenses)}</div></div>`:''}</div><br>
+  ${alerts(d.alerts)}<h3>${t('flocks')}</h3>${f.map(x=>`<div class="card click" data-go="flock" data-id="${x.id}"><div class="row"><b>${esc(x.name)}</b>${x.logged_today?'<span class="pill ok">✓</span>':`<span class="pill warn">${t('notLogged')}</span>`}</div>
+  <div class="mute">${t(x.kind)} · ${t('day')} ${x.age_days} · ${x.kpis.live_birds}/${x.initial_count}</div></div>`).join('')||`<p class="mute">${t('none')}</p>`}
+  ${canManage()?`<details class="card"><summary><b>+ ${t('addFlock')}</b></summary><form data-form="flock">${field('name','flockName','text','required')}<label>${t('type')}</label><select name="kind">${opts([['layer',t('layer')],['broiler',t('broiler')],['kienyeji',t('kienyeji')]])}</select>
+  ${field('breed','breed')}${field('initial_count','count','number','required min=1 inputmode=numeric')}${field('placed_on','placed','date',`required value="${today()}"`)}${field('cost_per_chick','chickCost','number','min=0 step=any value=0')}<p><button>${t('save')}</button></p></form></details>`:''}`},
+
+async flock(){
+  const id=S.flockId;const [f,logs,vs]=await Promise.all([cached('f'+id,'/flocks/'+id),cached('l'+id,`/flocks/${id}/logs?limit=7`),cached('v'+id,`/vaccinations?flock_id=${id}`)]);const k=f.kpis;
+  return `<button class="alt sm" data-go="home">${t('back')}</button><h2>${esc(f.name)} <span class="pill">${t(f.kind)} · ${t('day')} ${f.age_days}</span></h2>${alerts(f.alerts.map(a=>({...a,flock:''})))}${kpiRow(k,f.kind)}<br>
+  ${f.status==='active'&&S.me.role!=='vet'?`<div class="card"><h3>${t('logToday')}</h3><form data-form="log" data-flock="${id}">${field('log_date','date','date',`required value="${today()}"`)}
+  ${f.kind!=='broiler'?field('eggs','eggs','number','min=0 inputmode=numeric value=0')+field('cracked','cracked','number','min=0 value=0'):''}${field('deaths','deaths','number','min=0 inputmode=numeric value=0')}${field('feed_kg','feed','number','min=0 step=any inputmode=decimal value=0')}
+  ${f.kind==='broiler'?field('avg_weight_g','weight','number','min=1 step=any'):field('water_l','water','number','min=0 step=any value=0')}${field('notes','notes')}<p><button class="yolk">${t('save')}</button></p></form></div>`:''}
+  <div class="card"><h3>${t('vacc')}</h3>${vs.map(v=>`<div class="row"><div>${v.due_date}<br><span class="mute">${esc(v.vaccine)}</span></div>${v.done_on?'<span class="pill ok">✓</span>':`<button class="sm" data-act="vdone" data-id="${v.id}">${t('done')}</button>`}</div><hr style="border:0;border-top:1px solid var(--line)">`).join('')}</div>
+  <div class="card"><h3>${t('recent')}</h3><table><tr><th>${t('date')}</th><th>🥚</th><th>☠</th><th>kg</th></tr>${logs.map(l=>`<tr><td>${l.log_date.slice(5)}</td><td>${l.eggs}</td><td>${l.deaths}</td><td>${l.feed_kg}</td></tr>`).join('')}</table></div>
+  <button class="alt sm" data-act="askvet" data-id="${id}">🩺 ${t('askVet')}</button> ${canManage()&&f.status==='active'?`<button class="alt sm" data-act="close" data-id="${id}">${t('close')}</button>`:''}`},
+
+async money(){
+  if(!canManage())return `<p class="mute">—</p>`;const [tx,fl]=await Promise.all([cached('tx','/transactions?limit=50'),cached('flocksAll','/flocks?status=all')]);
+  return `<div class="card"><h3>${t('ledger')}</h3><form data-form="tx"><label>${t('kind')}</label><select name="kind">${opts([['expense',t('expense')],['income',t('incomeK')]])}</select>
+  <label>${t('category')}</label><select name="category">${opts(['feed','chicks','drugs','labour','utilities','transport','eggs','birds','manure','other'].map(c=>[c,c]))}</select>${field('amount','amount','number','required min=1 step=any inputmode=decimal')}
+  <label>${t('flock')}</label><select name="flock_id"><option value="">—</option>${opts(fl.map(f=>[f.id,f.name]))}</select>${field('description','desc')}<p><button class="yolk">${t('save')}</button></p></form></div>
+  <div class="card"><table>${tx.map(x=>`<tr><td>${x.tx_date.slice(5)}</td><td>${esc(x.category)}<br><span class="mute">${esc(x.description||'')}</span></td><td style="text-align:right;color:${x.kind==='income'?'var(--sage)':'var(--comb)'}">${x.kind==='income'?'+':'−'}${Math.round(x.amount).toLocaleString()}</td></tr>`).join('')}</table></div>`},
+
+async stock(){const items=await cached('inv','/inventory');
+  return `<h3>${t('stock')}</h3>${items.map(i=>`<div class="card row"><div><b>${esc(i.name)}</b><br><span class="${i.reorder_level&&i.quantity<=i.reorder_level?'pill warn':'mute'}">${i.quantity} ${esc(i.unit)}</span></div>
+  <div><button class="sm alt" data-act="adj" data-id="${i.id}" data-d="-1">−1</button> <button class="sm" data-act="adj" data-id="${i.id}" data-d="1">+1</button> <button class="sm" data-act="adj" data-id="${i.id}" data-d="10">+10</button></div></div>`).join('')||`<p class="mute">${t('none')}</p>`}
+  ${canManage()?`<details class="card"><summary><b>+ ${t('add')}</b></summary><form data-form="item">${field('name','item','text','required')}<label>${t('type')}</label><select name="category">${opts([['feed','feed'],['drug','drug'],['other','other']])}</select>${field('unit','unit','text','required value=kg')}${field('quantity','qty','number','min=0 step=any value=0')}${field('reorder_level','reorder','number','min=0 step=any value=0')}<p><button>${t('save')}</button></p></form></details>`:''}`},
+
+async more(){const me=await api('/auth/me');S.me=me;const staff=canManage()?await api('/auth/staff'):[];const isFarmer=me.role==='owner'&&me.account_type==='farm';const shares=isFarmer?await api('/reports/shares').catch(()=>[]):[];
+  return `<div class="card"><b>${esc(me.name)}</b> · ${me.role}<br><span class="mute">${esc(me.farm_name)} · ${t('plan')} ${me.plan_expires_on||'—'}</span>
+  <p>${me.role==='owner'?`<button class="yolk sm" data-act="renew">${t('renew')}</button> `:''}<button class="alt sm" data-act="lang">${t('lang')}</button> <button class="alt sm" data-act="logout">${t('logout')}</button></p></div>
+  ${isFarmer?`<div class="card"><h3>${t('lender')}</h3><p class="mute">${t('shareHint')}</p><button class="sm yolk" data-act="mkshare">${t('mkLink')}</button>${shares.map(x=>`<div class="row" style="margin-top:8px"><span class="mute">→ ${x.expires_at.slice(0,10)} ${x.active?'':'(x)'}</span>${x.active?`<button class="sm alt" data-act="revshare" data-id="${x.id}">${t('revoke')}</button>`:''}</div>`).join('')}</div>`:''}
+  ${me.role==='owner'?`<div class="card"><button class="sm alt" data-act="mydata">${t('myData')}</button> <button class="sm" style="background:var(--comb)" data-act="delacct">${t('delAcct')}</button></div>`:''}
+  ${canManage()?`<div class="card"><button class="sm" data-act="csv" data-k="flocks">${t('export')} (${t('flocks')})</button> <button class="sm alt" data-act="csv" data-k="transactions">${t('export')} (${t('ledger')})</button></div>`:''}
+  ${canManage()?`<div class="card"><h3>${t('staff')}</h3>${staff.map(u=>`<div class="row"><span>${esc(u.name)}</span><span class="pill">${u.role}</span></div>`).join('')}
+  ${me.role==='owner'?`<details><summary><b>+ ${t('add')}</b></summary><form data-form="staff">${field('name','name','text','required')}${field('phone','phone','tel','required')}${field('password','password','password','required minlength=6')}<label>${t('role')}</label><select name="role">${opts([['worker','worker'],['manager','manager'],['vet','vet']])}</select><p><button>${t('save')}</button></p></form></details>`:''}</div>`:''}`}};
+
+async function render(){
+  net();const app=$('#app'),nav=$('#nav');document.documentElement.lang=S.lang;
+  if(!S.token){nav.classList.add('hide');app.innerHTML=S.forgot?V.forgot():V.auth();$('#sub').textContent='Kuku management';return}
+  try{if(!S.me)S.me=await api('/auth/me').catch(e=>{if(e instanceof TypeError)return JSON.parse(localStorage.me||'null');throw e});localStorage.me=JSON.stringify(S.me)}catch(e){return}
+  $('#sub').textContent=S.me?.farm_name||'';nav.classList.remove('hide');
+  if(S.view==='home'&&S.me.account_type!=='farm')S.view=S.me.account_type==='vet'?'vet':'market';const kind=S.me.account_type;
+  const tabs=(kind==='farm'?[['home','🏠',t('home')],['money','💰',t('money')],['stock','📦',t('stock')],['market','🛒',t('market')],['vet','🩺',t('vet')],['more','⋯',t('more')]]:kind==='vet'?[['vet','🩺',t('vet')],['market','🛒',t('market')],['more','⋯',t('more')]]:[['market','🛒',t('market')],['more','⋯',t('more')]]).filter(x=>canManage()||x[0]!=='money');
+  nav.innerHTML=tabs.map(([v,i,l])=>`<button class="${(S.view===v||(S.view==='flock'&&v==='home')||(S.view==='vetcase'&&v==='vet'))?'on':''}" data-go="${v}">${i}<br>${l}</button>`).join('');
+  try{app.innerHTML=await V[S.view]();loadPhotos()}catch(e){app.innerHTML=`<div class="card">${esc(e.message)}</div>`}}
+
+const H={
+ async register(f){const r=await api('/auth/register',{method:'POST',body:{...f,consent:true,licence_no:f.licence_no||null}});start(r)},
+ async forgot(f){await api('/auth/forgot',{method:'POST',body:f});S.fphone=f.phone;S.fstep=1;toast(t('codeSent'));render()},
+ async reset(f){await api('/auth/reset',{method:'POST',body:{phone:S.fphone,...f}});S.forgot=false;S.fstep=0;S.reg=false;toast('✓');render()},
+ async listing(f){await api('/market/listings',{method:'POST',body:{...f,quantity:+f.quantity,price_per_unit:f.price_per_unit?+f.price_per_unit:null,description:f.description||null}});toast('✓');S.mtab='mine';render()},
+ async vetcase(f,el){const c=await api('/vet/cases',{method:'POST',body:{title:f.title,symptoms:f.symptoms,flock_id:f.flock_id?+f.flock_id:null,affected_birds:f.affected_birds?+f.affected_birds:null,urgency:f.urgency?'urgent':'normal'}});
+  for(const file of [...el.photos.files].slice(0,5)){try{await upload(c.id,await shrink(file))}catch(e){toast(e.message)}}S.askFlock=null;go('vetcase',c.id)},
+ async vetreply(f,el){await api(`/vet/cases/${el.dataset.case}/messages`,{method:'POST',body:{body:f.body}});render()},
+ async vetdx(f,el){await api(`/vet/cases/${el.dataset.case}/diagnosis`,{method:'POST',body:{disease:f.disease}});render()},
+ async login(f){const r=await api('/auth/login',{method:'POST',body:f});start(r)},
+ async flock(f){await api('/flocks',{method:'POST',body:{...f,initial_count:+f.initial_count,cost_per_chick:+f.cost_per_chick||0,breed:f.breed||null}});toast('✓');render()},
+ async log(f,el){const n=k=>f[k]===undefined||f[k]===''?undefined:+f[k];const d={flock_id:+el.dataset.flock,log_date:f.log_date,eggs:n('eggs')||0,cracked:n('cracked')||0,deaths:n('deaths')||0,feed_kg:n('feed_kg')||0,water_l:n('water_l')||0,notes:f.notes||null};
+   if(n('avg_weight_g'))d.avg_weight_g=n('avg_weight_g');if(await submit('log',d))toast('✓');render()},
+ async tx(f){const d={kind:f.kind,category:f.category,amount:+f.amount,tx_date:today(),description:f.description||null,flock_id:f.flock_id?+f.flock_id:null,client_id:crypto.randomUUID()};if(await submit('tx',d))toast('✓');render()},
+ async item(f){await api('/inventory',{method:'POST',body:{...f,quantity:+f.quantity,reorder_level:+f.reorder_level}});render()},
+ async staff(f){await api('/auth/staff',{method:'POST',body:f});toast('✓');render()}};
+function start(r){S.token=localStorage.token=r.access_token;S.me=null;S.view='home';render();flush()}
+document.addEventListener('submit',async e=>{e.preventDefault();const el=e.target;try{await H[el.dataset.form](Object.fromEntries(new FormData(el)),el)}catch(err){toast(err.message)}});
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-go],[data-act]');if(!b)return;const D=b.dataset;
+ try{if(D.go)return go(D.go,D.id&&+D.id);
+  if(D.act==='toggleReg'){S.reg=!S.reg;render()}
+  if(D.act==='lang'){S.lang=localStorage.lang=S.lang==='en'?'sw':'en';render()}
+  if(D.act==='logout')logout();
+  if(D.act==='mtab'){S.mtab=D.k;render()}
+  if(D.act==='mside'){S.mside=D.k;render()}
+  if(D.act==='lclose'){await api(`/market/listings/${D.id}/close`,{method:'POST'});render()}
+  if(D.act==='inq'){const q=prompt(t('qtyAsk')+' ('+D.u+')');if(q&&+q>0){const msg=prompt(t('msgAsk'))||null;await api(`/market/listings/${D.id}/inquiries`,{method:'POST',body:{quantity:+q,message:msg}});toast('✓')}}
+  if(D.act==='resp'){await api(`/market/inquiries/${D.id}/respond`,{method:'POST',body:{action:D.a}});render()}
+  if(D.act==='askvet'){S.askFlock=D.id;go('vet')}
+  if(D.act==='vclose'&&confirm('?')){await api(`/vet/cases/${D.id}/close`,{method:'POST'});go('vet')}
+  if(D.act==='mkshare'){const r=await api('/reports/lender/share',{method:'POST',body:{days:14}});if(navigator.share)navigator.share({title:'KukuTrack farm report',url:r.url}).catch(()=>{});else prompt('Link',r.url);render()}
+  if(D.act==='revshare'){await api('/reports/shares/'+D.id,{method:'DELETE'});render()}
+  if(D.act==='forgot'){S.forgot=true;S.fstep=0;render()}
+  if(D.act==='forgot0'){S.forgot=false;S.fstep=0;render()}
+  if(D.act==='mydata'){const r=await fetch('/api/auth/account/export',{headers:{Authorization:'Bearer '+S.token}});if(!r.ok)throw new Error((await r.json()).detail);const a=document.createElement('a');a.href=URL.createObjectURL(await r.blob());a.download='kukutrack-my-data.json';a.click()}
+  if(D.act==='delacct'){const p=prompt(t('delAsk'));if(p){await api('/auth/account',{method:'DELETE',body:{password:p}});logout()}}
+  if(D.act==='vdone'){await api(`/vaccinations/${D.id}/done`,{method:'POST'});render()}
+  if(D.act==='close'&&confirm('?')){await api(`/flocks/${D.id}/close`,{method:'POST'});go('home')}
+  if(D.act==='adj'){await api(`/inventory/${D.id}/adjust`,{method:'POST',body:{delta:+D.d}});render()}
+  if(D.act==='renew'){const r=await api('/billing/checkout',{method:'POST',body:{}});toast(r.message)}
+  if(D.act==='csv'){const r=await fetch('/api/reports/export.csv?kind='+D.k,{headers:{Authorization:'Bearer '+S.token}});if(!r.ok)throw new Error((await r.json()).detail);const a=document.createElement('a');a.href=URL.createObjectURL(await r.blob());a.download=`kukutrack-${D.k}.csv`;a.click()}
+ }catch(err){toast(err.message)}});
+function shrink(file,max=1280){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=img.width*k;c.height=img.height*k;c.getContext('2d').drawImage(img,0,0,c.width,c.height);c.toBlob(b=>b?res(b):rej(new Error('Bad image')),'image/jpeg',.72)};img.onerror=()=>rej(new Error('Bad image'));img.src=URL.createObjectURL(file)})}
+async function upload(id,blob){const fd=new FormData();fd.append('file',blob,'photo.jpg');const r=await fetch(`/api/vet/cases/${id}/photos`,{method:'POST',headers:{Authorization:'Bearer '+S.token},body:fd});if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||'Upload failed')}
+function loadPhotos(){document.querySelectorAll('img[data-photo]').forEach(async im=>{try{const r=await fetch('/api/vet/photos/'+im.dataset.photo,{headers:{Authorization:'Bearer '+S.token}});if(r.ok)im.src=URL.createObjectURL(await r.blob())}catch(e){}})}
+document.addEventListener('change',e=>{const el=e.target.closest('[data-filter]');if(el){S[el.dataset.filter]=el.value;render()}});
+if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js');
+render();flush();
+</script>
+</body>
+</html>

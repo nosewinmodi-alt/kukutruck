@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment: {POSTGRES_USER: kuku, POSTGRES_PASSWORD: ${DB_PASSWORD:-kuku}, POSTGRES_DB: kukutrack}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U kuku"], interval: 5s, retries: 10}
+  api:
+    build: {context: ., dockerfile: backend/Dockerfile}
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://kuku:${DB_PASSWORD:-kuku}@db:5432/kukutrack
+      UPLOAD_DIR: /srv/backend/uploads
+    volumes: [uploads:/srv/backend/uploads]
+    depends_on: {db: {condition: service_healthy}}
+    ports: ["8000:8000"]
+    restart: unless-stopped
+  reminders:   # hourly vaccination SMS reminders
+    build: {context: ., dockerfile: backend/Dockerfile}
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://kuku:${DB_PASSWORD:-kuku}@db:5432/kukutrack
+    command: sh -c "while true; do python -m app.jobs.reminders; sleep 3600; done"
+    depends_on: {api: {condition: service_healthy}}
+    restart: unless-stopped
+volumes:
+  pgdata:
+  uploads:
